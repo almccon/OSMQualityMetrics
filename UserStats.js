@@ -11,6 +11,9 @@ var users = [];
 var pf, iscurrent;
 var nodecnt = 0, waycnt = 0, relationcnt = 0;
 var currentnodecnt = 0, currentwaycnt = 0, currentrelationcnt = 0;
+var earliestYear, latestYear; // Track which years are present in the data
+var nodes = [], ways = [], relations = [];	// For counting by year
+var currentnodes = [], currentways = [], currentrelations = [];	// For counting by year
 var interval = 1000000;
 var t0, t1, tnodes0, tnodes1, tways1, trelations1;
 
@@ -198,8 +201,14 @@ function processlastfeature(cf)
     }
     
     var d1 = users[pf.uid].firstObj;
-    var d2 = new Date(pf.timestamp)
+    var d2 = new Date(pf.timestamp);
+    var year = d2.getYear()+1900;
     var d3 = users[pf.uid].lastObj;
+
+    if (!earliestYear) earliestYear = year;
+    else earliestYear = (earliestYear < year) ? earliestYear : year;
+    if (!latestYear) latestYear = year;
+    else latestYear = (latestYear > year) ? latestYear : year;
     
     users[pf.uid].firstObj = (d1 < d2) ? d1 : d2;
     users[pf.uid].lastObj = (d3 > d2) ? d3 : d2;
@@ -210,16 +219,19 @@ function processlastfeature(cf)
         if (doingnodes) 
         {
             currentnodecnt++;
+            if (currentnodes.hasOwnProperty(year)) currentnodes[year]++; else currentnodes[year] = 0;
             users[pf.uid].currentnodes++;
         }
         else if (doingways) 
         {
             currentwaycnt++;
+            if (currentways.hasOwnProperty(year)) currentways[year]++; else currentways[year] = 0;
             users[pf.uid].currentways++;
         }
         else 
         {
             currentrelationcnt++;
+            if (currentrelations.hasOwnProperty(year)) currentrelations[year]++; else currentrelations[year] = 0;
             users[pf.uid].currentrelations++;
         }
     }
@@ -227,6 +239,7 @@ function processlastfeature(cf)
     if (doingnodes) 
     {
         nodecnt++;
+        if (nodes.hasOwnProperty(year)) nodes[year]++; else nodes[year] = 0;
         users[pf.uid].nodes++;
         if (pf.version == 1) users[pf.uid].nodescreated++
         if (nodecnt % interval == 0) print(nodecnt + '...');
@@ -234,6 +247,7 @@ function processlastfeature(cf)
     else if (doingways) 
     {
         waycnt++;
+        if (ways.hasOwnProperty(year)) ways[year]++; else ways[year] = 0;
         users[pf.uid].ways++;
         if (pf.version == 1) users[pf.uid].wayscreated++
         if (waycnt % interval == 0) print(waycnt + '...');
@@ -241,6 +255,7 @@ function processlastfeature(cf)
     else 
     {
         relationcnt++;
+        if (relations.hasOwnProperty(year)) relations[year]++; else relations[year] = 0;
         users[pf.uid].relations++;
         if (pf.version == 1) users[pf.uid].relationscreated++
         if (relationcnt % interval == 0) print(relationcnt + '...');
@@ -346,4 +361,8 @@ Osmium.Callbacks.end = function()
     t1 = new Date();
     var tnodes=tnodes1-tnodes0;tways=tways1-tnodes1;trelations=trelations1-tways1;
     print('finished!\nTimings:\ntotal: ' + (t1-t0) + ' ms\n---------------------\nnodes: ' + tnodes + 'ms\nways: ' + tways + 'ms\nrelations: ' + trelations + 'ms\noverhead: ' + ((t1-t0)-(tnodes+tways+trelations)) + 'ms');
+    print('year\tnodes\tways\trels\tcurrent versions');
+    for(year = earliestYear; year <= latestYear; year++) {
+        print([year,nodes[year],ways[year],relations[year],currentnodes[year],currentways[year],currentrelations[year]].join('\t'));
+    }
 }
