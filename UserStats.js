@@ -12,8 +12,8 @@ var pf, iscurrent;
 var nodecnt = 0, waycnt = 0, relationcnt = 0;
 var currentnodecnt = 0, currentwaycnt = 0, currentrelationcnt = 0;
 var earliestYear, latestYear; // Track which years are present in the data
-var nodes = [], ways = [], relations = [];	// For counting by year
-var currentnodes = [], currentways = [], currentrelations = [];	// For counting by year
+var yearByYear = []; // an object for each year with yearly totals
+var doMonthlyStats = true;
 var interval = 1000000;
 var t0, t1, tnodes0, tnodes1, tways1, trelations1;
 
@@ -151,6 +151,19 @@ Date.prototype.format = function (mask, utc) {
  * ====================
  */
 
+function StatsCounter()
+{
+    this.nodes=0;
+    this.nodescreated = 0;
+    this.currentnodes = 0;
+    this.ways=0;
+    this.wayscreated = 0;
+    this.currentways = 0;
+    this.relations=0;
+    this.relationscreated = 0;
+    this.currentrelations = 0;
+}
+
 function User(uid,name) 
 {
     this.uid=uid;
@@ -203,6 +216,7 @@ function processlastfeature(cf)
     var d1 = users[pf.uid].firstObj;
     var d2 = new Date(pf.timestamp);
     var year = d2.getYear()+1900;
+    var month = d2.getMonth();
     var d3 = users[pf.uid].lastObj;
 
     if (!earliestYear) earliestYear = year;
@@ -219,19 +233,34 @@ function processlastfeature(cf)
         if (doingnodes) 
         {
             currentnodecnt++;
-            if (currentnodes.hasOwnProperty(year)) currentnodes[year]++; else currentnodes[year] = 0;
+            if (yearByYear.hasOwnProperty(year)) yearByYear[year].currentnodes++; else yearByYear[year] = new StatsCounter();
+            if (users[pf.uid].hasOwnProperty(year)) users[pf.uid][year].currentnodes++; else users[pf.uid][year] = new StatsCounter();
+            if (doMonthlyStats) {
+                if (yearByYear[year].hasOwnProperty(month)) yearByYear[year][month].currentnodes++; else yearByYear[year][month] = new StatsCounter();
+                if (users[pf.uid][year].hasOwnProperty(month)) users[pf.uid][year][month].currentnodes++; else users[pf.uid][year][month] = new StatsCounter();
+            }
             users[pf.uid].currentnodes++;
         }
         else if (doingways) 
         {
             currentwaycnt++;
-            if (currentways.hasOwnProperty(year)) currentways[year]++; else currentways[year] = 0;
+            if (yearByYear.hasOwnProperty(year)) yearByYear[year].currentways++; else yearByYear[year] = new StatsCounter();
+            if (users[pf.uid].hasOwnProperty(year)) users[pf.uid][year].currentways++; else users[pf.uid][year] = new StatsCounter();
+            if (doMonthlyStats) {
+                if (yearByYear[year].hasOwnProperty(month)) yearByYear[year][month].currentways++; else yearByYear[year][month] = new StatsCounter();
+                if (users[pf.uid][year].hasOwnProperty(month)) users[pf.uid][year][month].currentways++; else users[pf.uid][year][month] = new StatsCounter();
+            }
             users[pf.uid].currentways++;
         }
         else 
         {
             currentrelationcnt++;
-            if (currentrelations.hasOwnProperty(year)) currentrelations[year]++; else currentrelations[year] = 0;
+            if (yearByYear.hasOwnProperty(year)) yearByYear[year].currentrelations++; else yearByYear[year] = new StatsCounter();
+            if (users[pf.uid].hasOwnProperty(year)) users[pf.uid][year].currentrelations++; else users[pf.uid][year] = new StatsCounter();
+            if (doMonthlyStats) {
+                if (yearByYear[year].hasOwnProperty(month)) yearByYear[year][month].currentrelations++; else yearByYear[year][month] = new StatsCounter();
+                if (users[pf.uid][year].hasOwnProperty(month)) users[pf.uid][year][month].currentrelations++; else users[pf.uid][year][month] = new StatsCounter();
+            }
             users[pf.uid].currentrelations++;
         }
     }
@@ -239,25 +268,55 @@ function processlastfeature(cf)
     if (doingnodes) 
     {
         nodecnt++;
-        if (nodes.hasOwnProperty(year)) nodes[year]++; else nodes[year] = 0;
+        if (yearByYear.hasOwnProperty(year)) yearByYear[year].nodes++; else yearByYear[year] = new StatsCounter();
+        if (users[pf.uid].hasOwnProperty(year)) users[pf.uid][year].nodes++; else users[pf.uid][year] = new StatsCounter();
+        if (doMonthlyStats) {
+            if (yearByYear[year].hasOwnProperty(month)) yearByYear[year][month].nodes++; else yearByYear[year][month] = new StatsCounter();
+            if (users[pf.uid][year].hasOwnProperty(month)) users[pf.uid][year][month].nodes++; else users[pf.uid][year][month] = new StatsCounter();
+        }
         users[pf.uid].nodes++;
-        if (pf.version == 1) users[pf.uid].nodescreated++
+        if (pf.version == 1) {
+            users[pf.uid].nodescreated++;
+            users[pf.uid][year].nodescreated++;
+            yearByYear[year].nodescreated++;
+            if (doMonthlyStats) { yearByYear[year][month].nodescreated++; users[pf.uid][year][month].nodescreated++; }
+        }
         if (nodecnt % interval == 0) print(nodecnt + '...');
     }
     else if (doingways) 
     {
         waycnt++;
-        if (ways.hasOwnProperty(year)) ways[year]++; else ways[year] = 0;
+        if (yearByYear.hasOwnProperty(year)) yearByYear[year].ways++; else yearByYear[year] = new StatsCounter();
+        if (users[pf.uid].hasOwnProperty(year)) users[pf.uid][year].ways++; else users[pf.uid][year] = new StatsCounter();
         users[pf.uid].ways++;
-        if (pf.version == 1) users[pf.uid].wayscreated++
+        if (doMonthlyStats) {
+            if (yearByYear[year].hasOwnProperty(month)) yearByYear[year][month].ways++; else yearByYear[year][month] = new StatsCounter(); 
+            if (users[pf.uid][year].hasOwnProperty(month)) users[pf.uid][year][month].ways++; else users[pf.uid][year][month] = new StatsCounter(); 
+        }
+        if (pf.version == 1) {
+            users[pf.uid].wayscreated++;
+            users[pf.uid][year].wayscreated++;
+            yearByYear[year].wayscreated++;
+            if (doMonthlyStats) { yearByYear[year][month].wayscreated++; users[pf.uid][year][month].wayscreated++; }
+        }
         if (waycnt % interval == 0) print(waycnt + '...');
     }
     else 
     {
         relationcnt++;
-        if (relations.hasOwnProperty(year)) relations[year]++; else relations[year] = 0;
+        if (yearByYear.hasOwnProperty(year)) yearByYear[year].relations++; else yearByYear[year] = new StatsCounter();
+        if (users[pf.uid].hasOwnProperty(year)) users[pf.uid][year].relations++; else users[pf.uid][year] = new StatsCounter();
+        if (doMonthlyStats) {
+            if (yearByYear[year].hasOwnProperty(month)) yearByYear[year][month].relations++; else yearByYear[year][month] = new StatsCounter(); 
+            if (users[pf.uid][year].hasOwnProperty(month)) users[pf.uid][year][month].relations++; else users[pf.uid][year][month] = new StatsCounter(); 
+        }
         users[pf.uid].relations++;
-        if (pf.version == 1) users[pf.uid].relationscreated++
+        if (pf.version == 1) {
+            users[pf.uid].relationscreated++;
+            users[pf.uid][year].relationscreated++;
+            yearByYear[year].relationscreated++;
+            if (doMonthlyStats) { yearByYear[year][month].relationscreated++; users[pf.uid][year][month].relationscreated++; }
+        }
         if (relationcnt % interval == 0) print(relationcnt + '...');
     }
 }
@@ -335,34 +394,44 @@ Osmium.Callbacks.end = function()
     var out = Osmium.Output.CSV.open(OUT_DIR + '/userstats.csv');
 
     // Print headers
-    out.print('uid\tusername\tnodes\tnodes_created\tcur nodes\tways\tways_created\tcur ways\trelations\trelations_created\tcur rels\tfirst\tlast\tdays active\ttotal edits\tcurrent objects\tavg edits/day\tpersistence');
+    out.print('uid\tusername\tyear\tnodes\tnodes_created\tcur nodes\tways\tways_created\tcur ways\trelations\trelations_created\tcur rels\ttotal edits\tcurrent objects\tpersistence');
 
     // Caluculate metrics for each user
     for (var i=0;i<users.length;i++)
     {
         if(typeof(users[i])=='undefined') continue;
         realusercnt++;
-        var u = users[i];
-        var dLast = u.lastObj
-        var dLastFormatted = dLast.format("mm/dd/yyyy");
-        var dFirst = u.firstObj
-        var dFirstFormatted = dFirst.format("mm/dd/yyyy");
-        var daysActive = Math.max(1, Math.ceil((dLast - dFirst) / day)); // If a user made no edits at all, daysActive will be 0.
-        var totalEdits = u.nodes + u.ways + u.relations;
-        var currentObjects = u.currentnodes + u.currentways + u.currentrelations;
-        var avgEditsPerDay = totalEdits / daysActive;
-        var persistence = currentObjects / totalEdits;
-        out.print(u.uid, u.name, u.nodes, u.nodescreated, u.currentnodes, u.ways, u.wayscreated, u.currentways, u.relations, u.relationscreated, u.currentrelations,dFirstFormatted ,dLastFormatted , daysActive ,totalEdits , currentObjects, avgEditsPerDay, persistence);
+        for(var year = earliestYear; year <= latestYear; year++) {
+            for(var month = 0; month < 12; month++) {
+                if (users[i].hasOwnProperty(year) && users[i][year].hasOwnProperty(month)) var u = users[i][year][month]; else continue;
+                var displayMonth = month + 1;
+                if (displayMonth < 10) displayMonth = "0" + displayMonth.toString();
+                var totalEdits = u.nodes + u.ways + u.relations;
+                var currentObjects = u.currentnodes + u.currentways + u.currentrelations;
+                var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
+                out.print(users[i].uid, users[i].name, year + "-" + displayMonth.toString() + "-01", u.nodes, u.nodescreated, u.currentnodes, u.ways, u.wayscreated, u.currentways, u.relations, u.relationscreated, u.currentrelations,totalEdits , currentObjects, persistence);
+            }
+        }
     }
-
-    out.close();
 
     // OUTPUT TIMINGS
     t1 = new Date();
     var tnodes=tnodes1-tnodes0;tways=tways1-tnodes1;trelations=trelations1-tways1;
     print('finished!\nTimings:\ntotal: ' + (t1-t0) + ' ms\n---------------------\nnodes: ' + tnodes + 'ms\nways: ' + tways + 'ms\nrelations: ' + trelations + 'ms\noverhead: ' + ((t1-t0)-(tnodes+tways+trelations)) + 'ms');
-    print('year\tnodes\tways\trels\tcurrent versions');
+    //print('year\tnodes\tways\trels\tcurrent versions');
     for(year = earliestYear; year <= latestYear; year++) {
-        print([year,nodes[year],ways[year],relations[year],currentnodes[year],currentways[year],currentrelations[year]].join('\t'));
+        for(var month = 0; month < 12; month++) {
+            if (yearByYear[year].hasOwnProperty(month)) var yby = yearByYear[year][month]; else var yby = new StatsCounter();
+            var displayMonth = month + 1;
+            if (displayMonth < 10) displayMonth = "0" + displayMonth.toString();
+            //print([year + "-" + displayMonth + "-01", yby.nodes,yby.ways,yby.relations,yby.currentnodes,yby.currentways,yby.currentrelations].join('\t'));
+            var totalEdits = yby.nodes + yby.ways + yby.relations;
+            var currentObjects = yby.currentnodes + yby.currentways + yby.currentrelations;
+            var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
+            out.print(0, "total", year + "-" + displayMonth.toString() + "-01", yby.nodes, yby.nodescreated, yby.currentnodes, yby.ways, yby.wayscreated, yby.currentways, yby.relations, yby.relationscreated, yby.currentrelations,totalEdits , currentObjects, persistence);
+        }
     }
+
+    out.close();
+
 }
