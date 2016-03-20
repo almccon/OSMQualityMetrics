@@ -14,6 +14,7 @@ var currentnodecnt = 0, currentwaycnt = 0, currentrelationcnt = 0;
 var earliestYear, latestYear; // Track which years are present in the data
 var yearByYear = []; // an object for each year with yearly totals
 var doMonthlyStats = true;
+var printTotals = false;
 var interval = 1000000;
 var t0, t1, tnodes0, tnodes1, tways1, trelations1;
 
@@ -428,24 +429,27 @@ Osmium.Callbacks.end = function()
     var tnodes=tnodes1-tnodes0;tways=tways1-tnodes1;trelations=trelations1-tways1;
     print('finished!\nTimings:\ntotal: ' + (t1-t0) + ' ms\n---------------------\nnodes: ' + tnodes + 'ms\nways: ' + tways + 'ms\nrelations: ' + trelations + 'ms\noverhead: ' + ((t1-t0)-(tnodes+tways+trelations)) + 'ms');
     //print('year\tnodes\tways\trels\tcurrent versions');
-    for(year = earliestYear; year <= latestYear; year++) {
-        if (doMonthlyStats) {
-            for(var month = 0; month < 12; month++) {
-                if (yearByYear[year].hasOwnProperty(month)) var yby = yearByYear[year][month]; else var yby = new StatsCounter();
-                var displayMonth = month + 1;
-                if (displayMonth < 10) displayMonth = "0" + displayMonth.toString();
-                //print([year + "-" + displayMonth + "-01", yby.nodes,yby.ways,yby.relations,yby.currentnodes,yby.currentways,yby.currentrelations].join('\t'));
+
+    if (printTotals) {
+        for(year = earliestYear; year <= latestYear; year++) {
+            if (doMonthlyStats) {
+                for(var month = 0; month < 12; month++) {
+                    if (yearByYear[year].hasOwnProperty(month)) var yby = yearByYear[year][month]; else var yby = new StatsCounter();
+                    var displayMonth = month + 1;
+                    if (displayMonth < 10) displayMonth = "0" + displayMonth.toString();
+                    //print([year + "-" + displayMonth + "-01", yby.nodes,yby.ways,yby.relations,yby.currentnodes,yby.currentways,yby.currentrelations].join('\t'));
+                    var totalEdits = yby.nodes + yby.ways + yby.relations;
+                    var currentObjects = yby.currentnodes + yby.currentways + yby.currentrelations;
+                    var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
+                    out.print(0, "total", year + "-" + displayMonth.toString() + "-01", yby.nodes, yby.nodescreated, yby.currentnodes, yby.ways, yby.wayscreated, yby.currentways, yby.relations, yby.relationscreated, yby.currentrelations,totalEdits , currentObjects, persistence);
+                }
+            } else {
+                if (yearByYear.hasOwnProperty(year)) var yby = yearByYear[year]; else var yby = new StatsCounter();
                 var totalEdits = yby.nodes + yby.ways + yby.relations;
                 var currentObjects = yby.currentnodes + yby.currentways + yby.currentrelations;
                 var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
-                out.print(0, "total", year + "-" + displayMonth.toString() + "-01", yby.nodes, yby.nodescreated, yby.currentnodes, yby.ways, yby.wayscreated, yby.currentways, yby.relations, yby.relationscreated, yby.currentrelations,totalEdits , currentObjects, persistence);
+                out.print(0, "total", year, yby.nodes, yby.nodescreated, yby.currentnodes, yby.ways, yby.wayscreated, yby.currentways, yby.relations, yby.relationscreated, yby.currentrelations,totalEdits , currentObjects, persistence);
             }
-        } else {
-            if (yearByYear.hasOwnProperty(year)) var yby = yearByYear[year]; else var yby = new StatsCounter();
-            var totalEdits = yby.nodes + yby.ways + yby.relations;
-            var currentObjects = yby.currentnodes + yby.currentways + yby.currentrelations;
-            var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
-            out.print(0, "total", year, yby.nodes, yby.nodescreated, yby.currentnodes, yby.ways, yby.wayscreated, yby.currentways, yby.relations, yby.relationscreated, yby.currentrelations,totalEdits , currentObjects, persistence);
         }
     }
 
