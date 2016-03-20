@@ -283,6 +283,7 @@ function processlastfeature(cf)
         }
         if (nodecnt % interval == 0) print(nodecnt + '...');
     }
+/*
     else if (doingways) 
     {
         waycnt++;
@@ -319,6 +320,7 @@ function processlastfeature(cf)
         }
         if (relationcnt % interval == 0) print(relationcnt + '...');
     }
+*/
 }
 
 Osmium.Callbacks.init = function() 
@@ -343,7 +345,6 @@ Osmium.Callbacks.node = function()
     }
     pf = cloneFeature(this);
 }
-
 Osmium.Callbacks.way = function() 
 {
     if (doingnodes) 
@@ -402,14 +403,22 @@ Osmium.Callbacks.end = function()
         if(typeof(users[i])=='undefined') continue;
         realusercnt++;
         for(var year = earliestYear; year <= latestYear; year++) {
-            for(var month = 0; month < 12; month++) {
-                if (users[i].hasOwnProperty(year) && users[i][year].hasOwnProperty(month)) var u = users[i][year][month]; else continue;
-                var displayMonth = month + 1;
-                if (displayMonth < 10) displayMonth = "0" + displayMonth.toString();
+            if (doMonthlyStats) {
+                for(var month = 0; month < 12; month++) {
+                    if (users[i].hasOwnProperty(year) && users[i][year].hasOwnProperty(month)) var u = users[i][year][month]; else continue;
+                    var displayMonth = month + 1;
+                    if (displayMonth < 10) displayMonth = "0" + displayMonth.toString();
+                    var totalEdits = u.nodes + u.ways + u.relations;
+                    var currentObjects = u.currentnodes + u.currentways + u.currentrelations;
+                    var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
+                    out.print(users[i].uid, users[i].name, year + "-" + displayMonth.toString() + "-01", u.nodes, u.nodescreated, u.currentnodes, u.ways, u.wayscreated, u.currentways, u.relations, u.relationscreated, u.currentrelations,totalEdits , currentObjects, persistence);
+                }
+            } else {
+                if (users[i].hasOwnProperty(year)) var u = users[i][year]; else continue;
                 var totalEdits = u.nodes + u.ways + u.relations;
                 var currentObjects = u.currentnodes + u.currentways + u.currentrelations;
                 var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
-                out.print(users[i].uid, users[i].name, year + "-" + displayMonth.toString() + "-01", u.nodes, u.nodescreated, u.currentnodes, u.ways, u.wayscreated, u.currentways, u.relations, u.relationscreated, u.currentrelations,totalEdits , currentObjects, persistence);
+                out.print(users[i].uid, users[i].name, year, u.nodes, u.nodescreated, u.currentnodes, u.ways, u.wayscreated, u.currentways, u.relations, u.relationscreated, u.currentrelations,totalEdits , currentObjects, persistence);
             }
         }
     }
