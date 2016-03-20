@@ -207,7 +207,7 @@ function processlastfeature(cf)
     // seems to hold...
 
     iscurrent = (pf.id != cf.id); 
-    
+
     if(!users[pf.uid]) 
     {
         users[pf.uid] = new User(pf.uid,pf.user);
@@ -429,15 +429,23 @@ Osmium.Callbacks.end = function()
     print('finished!\nTimings:\ntotal: ' + (t1-t0) + ' ms\n---------------------\nnodes: ' + tnodes + 'ms\nways: ' + tways + 'ms\nrelations: ' + trelations + 'ms\noverhead: ' + ((t1-t0)-(tnodes+tways+trelations)) + 'ms');
     //print('year\tnodes\tways\trels\tcurrent versions');
     for(year = earliestYear; year <= latestYear; year++) {
-        for(var month = 0; month < 12; month++) {
-            if (yearByYear[year].hasOwnProperty(month)) var yby = yearByYear[year][month]; else var yby = new StatsCounter();
-            var displayMonth = month + 1;
-            if (displayMonth < 10) displayMonth = "0" + displayMonth.toString();
-            //print([year + "-" + displayMonth + "-01", yby.nodes,yby.ways,yby.relations,yby.currentnodes,yby.currentways,yby.currentrelations].join('\t'));
+        if (doMonthlyStats) {
+            for(var month = 0; month < 12; month++) {
+                if (yearByYear[year].hasOwnProperty(month)) var yby = yearByYear[year][month]; else var yby = new StatsCounter();
+                var displayMonth = month + 1;
+                if (displayMonth < 10) displayMonth = "0" + displayMonth.toString();
+                //print([year + "-" + displayMonth + "-01", yby.nodes,yby.ways,yby.relations,yby.currentnodes,yby.currentways,yby.currentrelations].join('\t'));
+                var totalEdits = yby.nodes + yby.ways + yby.relations;
+                var currentObjects = yby.currentnodes + yby.currentways + yby.currentrelations;
+                var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
+                out.print(0, "total", year + "-" + displayMonth.toString() + "-01", yby.nodes, yby.nodescreated, yby.currentnodes, yby.ways, yby.wayscreated, yby.currentways, yby.relations, yby.relationscreated, yby.currentrelations,totalEdits , currentObjects, persistence);
+            }
+        } else {
+            if (yearByYear.hasOwnProperty(year)) var yby = yearByYear[year]; else var yby = new StatsCounter();
             var totalEdits = yby.nodes + yby.ways + yby.relations;
             var currentObjects = yby.currentnodes + yby.currentways + yby.currentrelations;
             var persistence = totalEdits > 0 ? currentObjects / totalEdits : 0;
-            out.print(0, "total", year + "-" + displayMonth.toString() + "-01", yby.nodes, yby.nodescreated, yby.currentnodes, yby.ways, yby.wayscreated, yby.currentways, yby.relations, yby.relationscreated, yby.currentrelations,totalEdits , currentObjects, persistence);
+            out.print(0, "total", year, yby.nodes, yby.nodescreated, yby.currentnodes, yby.ways, yby.wayscreated, yby.currentways, yby.relations, yby.relationscreated, yby.currentrelations,totalEdits , currentObjects, persistence);
         }
     }
 
