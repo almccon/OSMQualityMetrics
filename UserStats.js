@@ -13,9 +13,10 @@ var nodecnt = 0, waycnt = 0, relationcnt = 0;
 var currentnodecnt = 0, currentwaycnt = 0, currentrelationcnt = 0;
 var earliestYear, latestYear; // Track which years are present in the data
 var yearByYear = []; // an object for each year with yearly totals
-var doMonthlyStats = false;
+var doMonthlyStats = true;
 var doYearlyStats = false;
-var printTotals = false;
+var printTotals = true;
+var doUsers = false; // when false, only print totals, don't print user breakdowns
 var interval = 10000000;
 var t0, t1, tnodes0, tnodes1, tways1, trelations1;
 
@@ -436,13 +437,13 @@ Osmium.Callbacks.end = function()
     var realusercnt = 0;
 
     // Open output file in OUT_DIR
-    var out = Osmium.Output.CSV.open(OUT_DIR + '/userstats_summed.csv');
+    var out = Osmium.Output.CSV.open(OUT_DIR + '/userstats_totals.csv');
 
     // Print headers
     out.print('uid\tusername\tyear\tnodes\tnodes_created\tcur nodes\tways\tways_created\tcur ways\trelations\trelations_created\tcur rels\ttotal edits\tcurrent objects\tpersistence');
 
     // Caluculate metrics for each user
-    for (var i=0;i<users.length;i++)
+    if (doUsers) for (var i=0;i<users.length;i++)
     {
         if(typeof(users[i])=='undefined') continue;
         realusercnt++;
