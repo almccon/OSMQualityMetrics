@@ -16,7 +16,7 @@ var yearByYear = []; // an object for each year with yearly totals
 var doMonthlyStats = false;
 var doYearlyStats = false;
 var printTotals = false;
-var interval = 1000000;
+var interval = 10000000;
 var t0, t1, tnodes0, tnodes1, tways1, trelations1;
 
 /*
@@ -387,6 +387,7 @@ Osmium.Callbacks.node = function()
 }
 Osmium.Callbacks.way = function() 
 {
+/*
     if (doingnodes) 
     {
         // The before_* callbacks are not called, so we need a workaround.
@@ -404,10 +405,12 @@ Osmium.Callbacks.way = function()
         processlastfeature(this);
     }
     pf = cloneFeature(this);
+*/
 }
 
 Osmium.Callbacks.relation = function() 
 {
+/*
     if (doingways) 
     {
          // The before_* callbacks are not called, so we need a workaround.
@@ -421,6 +424,7 @@ Osmium.Callbacks.relation = function()
 
     if (pf) processlastfeature(this);
     pf = cloneFeature(this);
+*/
 }
 
 Osmium.Callbacks.end = function() 
@@ -432,7 +436,7 @@ Osmium.Callbacks.end = function()
     var realusercnt = 0;
 
     // Open output file in OUT_DIR
-    var out = Osmium.Output.CSV.open(OUT_DIR + '/userstats.csv');
+    var out = Osmium.Output.CSV.open(OUT_DIR + '/userstats_summed.csv');
 
     // Print headers
     out.print('uid\tusername\tyear\tnodes\tnodes_created\tcur nodes\tways\tways_created\tcur ways\trelations\trelations_created\tcur rels\ttotal edits\tcurrent objects\tpersistence');
